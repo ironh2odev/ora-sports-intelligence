@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* ---- Base color tokens ---- */
+:root {
+  /* Default to dark Aura theme */
+  --background: #020617; /* slate-950-ish */
+  --foreground: #e5e7eb; /* slate-200 */
+}
+
+/* Tailwind v4 inline theme tokens */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Aura palette */
+  --color-aura-bg: #020617;
+  --color-aura-surface: #020617;
+  --color-aura-card: #020617;
+  --color-aura-primary: #6366f1;   /* indigo-500 */
+  --color-aura-secondary: #22c55e; /* emerald-500 */
+  --color-aura-accent: #a855f7;    /* purple-500 */
+}
+
+/* If user prefers light, gently flip the base */
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #f9fafb; /* near white */
+    --foreground: #020617;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(
+      --font-geist-sans,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif
+    );
+}
+
+/* ---- Aura utility classes ---- */
+
+.aura-gradient {
+  @apply bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400;
+}
+
+.aura-card {
+  @apply bg-slate-900/70 border border-slate-800/60 rounded-2xl shadow-2xl;
+}
+
+.aura-badge {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-200;
+}
