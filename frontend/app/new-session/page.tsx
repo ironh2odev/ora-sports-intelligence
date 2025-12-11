@@ -1,195 +1,243 @@
-// frontend/app/new-session/page.tsx
-import Link from "next/link";
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSessions } from "../../components/SessionProvider";
+
+type LocalSessionType = "set-piece" | "drill" | "highlight";
 
 export default function NewSessionPage() {
+  const { addSession } = useSessions();
+  const router = useRouter();
+
+  const [sessionType, setSessionType] = useState<LocalSessionType>("set-piece");
+  const [playerName, setPlayerName] = useState("");
+  const [sessionDate, setSessionDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+  const [notes, setNotes] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [status, setStatus] = useState<
+    "idle" | "queued" | "processing" | "done"
+  >("idle");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+    } else {
+      setFileName(null);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!playerName.trim() || !fileName) {
+      window.alert("Please enter a player name and choose a video file.");
+      return;
+    }
+
+    setStatus("queued");
+    setTimeout(() => setStatus("processing"), 800);
+    setTimeout(() => {
+      setStatus("done");
+
+      const mappedType =
+        sessionType === "set-piece"
+          ? "Set-piece"
+          : sessionType === "drill"
+          ? "Drill"
+          : "Highlight";
+
+      addSession({
+        date: sessionDate,
+        type: mappedType as any,
+        player: playerName || "Unnamed player",
+        quality: "Good",
+        status: "Processed",
+      });
+
+      // redirect to dashboard so user sees the new row
+      router.push("/");
+    }, 1400);
+  };
+
+  const statusLabel = {
+    idle: "Not started",
+    queued: "Queued for processing…",
+    processing: "Analyzing pose & physics…",
+    done: "Ready to review in Dashboard",
+  }[status];
+
+  const statusColor = {
+    idle: "text-slate-400",
+    queued: "text-amber-300",
+    processing: "text-blue-300",
+    done: "text-emerald-300",
+  }[status];
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="flex h-screen">
-        {/* Sidebar */}
-        <aside className="w-64 border-r border-slate-800 bg-slate-950/80 px-5 py-6">
-          <div className="mb-8 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 text-xs font-semibold">
-              ORA
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <p className="text-xs font-medium tracking-[0.2em] text-slate-400 uppercase">
+            Ora · Sports Intelligence
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold text-slate-50">
+            New Session
+          </h1>
+          <p className="mt-1 text-sm text-slate-400">
+            Upload a new drill, set-piece, or highlight to analyze with pose,
+            physics, and AI coaching insights.
+          </p>
+        </div>
+
+        <div className="rounded-full border border-slate-700 bg-slate-900/60 px-4 py-2 text-xs text-slate-300">
+          Session status: <span className={statusColor}>{statusLabel}</span>
+        </div>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)]">
+        <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 shadow-sm shadow-black/40">
+          <h2 className="text-sm font-semibold text-slate-100">
+            Session details
+          </h2>
+          <p className="mt-1 text-xs text-slate-400">
+            Choose the clip type, player, and upload your footage.
+          </p>
+
+          <form
+            onSubmit={handleSubmit}
+            className="mt-5 flex flex-col gap-5 text-sm text-slate-200"
+          >
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-400">
+                Session type
+              </label>
+              <div className="inline-flex overflow-hidden rounded-full border border-slate-800 bg-slate-950/70 p-1 text-xs">
+                {[
+                  { id: "set-piece", label: "Set-piece" },
+                  { id: "drill", label: "Drill" },
+                  { id: "highlight", label: "Highlight" },
+                ].map((opt) => {
+                  const selected = sessionType === (opt.id as LocalSessionType);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setSessionType(opt.id as LocalSessionType)}
+                      className={`flex-1 rounded-full px-4 py-2 transition ${
+                        selected
+                          ? "bg-violet-500 text-slate-50 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+                          : "text-slate-300 hover:bg-slate-900/70"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold tracking-wide">
-                Sports Intelligence
-              </span>
-              <span className="text-xs text-slate-400">Demo club</span>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-medium text-slate-400">Player</label>
+                <input
+                  type="text"
+                  placeholder="e.g. T. Mbappé"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  className="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2.5 text-sm text-slate-100 outline-none ring-0 transition placeholder:text-slate-500 focus:border-violet-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-medium text-slate-400">Session date</label>
+                <input
+                  type="date"
+                  value={sessionDate}
+                  onChange={(e) => setSessionDate(e.target.value)}
+                  className="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2.5 text-sm text-slate-100 outline-none ring-0 transition placeholder:text-slate-500 focus:border-violet-500"
+                />
+              </div>
             </div>
-          </div>
 
-          <nav className="space-y-2 text-sm">
-            <Link
-              href="/"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Dashboard</span>
-            </Link>
-            <Link
-              href="/new-session"
-              className="flex items-center justify-between rounded-lg px-3 py-2 bg-slate-800 text-slate-50"
-            >
-              <span>New Session</span>
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            </Link>
-            <Link
-              href="/trends"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Trends</span>
-            </Link>
-            <Link
-              href="/reports"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Reports</span>
-            </Link>
-            <Link
-              href="/settings"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Settings</span>
-            </Link>
-          </nav>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-400">Upload video</label>
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-700 bg-slate-950/60 px-4 py-6 text-center text-xs text-slate-400 transition hover:border-violet-500 hover:bg-slate-900/60">
+                <span className="rounded-full bg-slate-900/80 px-3 py-1 text-[11px] font-medium text-slate-200">
+                  Click to choose file
+                </span>
+                <span className="max-w-xs text-[11px]">
+                  MP4 / MOV, 5–20 seconds recommended.
+                  <br />
+                  Close- to mid-range clips work best for biomechanics.
+                </span>
+                <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} />
+              </label>
+              {fileName && (
+                <p className="mt-1 text-[11px] text-emerald-300">
+                  Selected file: <span className="font-medium">{fileName}</span>
+                </p>
+              )}
+            </div>
 
-          <div className="mt-auto pt-8 text-xs text-slate-500">
-            <p>Demo coach: Aura Academy</p>
-          </div>
-        </aside>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-400">Notes (optional)</label>
+              <textarea
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. 10 free-kicks from left channel"
+                className="resize-none rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2.5 text-sm text-slate-100 outline-none ring-0 transition placeholder:text-slate-500 focus:border-violet-500"
+              />
+            </div>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto px-10 py-8">
-          <header className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">
-                New Session
-              </h1>
-              <p className="mt-1 text-sm text-slate-400">
-                Upload a drill, set-piece or highlight clip to analyze.
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center rounded-full bg-violet-500 px-5 py-2.5 text-sm font-medium text-slate-50 shadow-[0_0_25px_rgba(139,92,246,0.35)] transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:shadow-none"
+                disabled={status === "processing"}
+              >
+                {status === "idle" && "Start analysis"}
+                {status === "queued" && "Queued…"}
+                {status === "processing" && "Analyzing…"}
+                {status === "done" && "Re-run analysis"}
+              </button>
+
+              <p className="text-[11px] text-slate-500">
+                This simulates the pipeline for now. Backend integration comes next.
               </p>
             </div>
-            <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
-              Capture guide v1
-            </span>
-          </header>
+          </form>
+        </section>
 
-          <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-            {/* Upload + metadata */}
-            <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl shadow-slate-950/40">
-              <h2 className="mb-4 text-sm font-semibold text-slate-200">
-                Session details
-              </h2>
+        {/* right column (tips and hints) */}
+        <section className="flex flex-col gap-4">
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5 text-sm text-slate-200">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-slate-100">Capture quality preview</h2>
+              <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${
+                !fileName ? "bg-slate-900 text-slate-400" : status === "done" ? "bg-emerald-500/15 text-emerald-300" : "bg-amber-500/10 text-amber-300"
+              }`}>
+                {!fileName ? "Waiting for upload" : status === "done" ? "Good · Ready to review" : "Pending analysis"}
+              </span>
+            </div>
 
-              <form className="space-y-4 text-sm">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-300">
-                      Session type
-                    </label>
-                    <select className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none ring-0 focus:border-indigo-400">
-                      <option>Set-piece</option>
-                      <option>Drill</option>
-                      <option>Highlight</option>
-                    </select>
-                    <p className="text-[11px] text-slate-500">
-                      We bias analysis toward set-pieces & close-range drills.
-                    </p>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-300">
-                      Player
-                    </label>
-                    <input
-                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-                      placeholder="e.g. Player A"
-                    />
-                    <p className="text-[11px] text-slate-500">
-                      In a real app this would be a roster dropdown.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300">
-                    Camera notes (optional)
-                  </label>
-                  <input
-                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-                    placeholder="Side angle, 18-yard box, 60 fps…"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300">
-                    Video file
-                  </label>
-                  <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-900/40 px-4 py-8 text-center">
-                    <p className="text-sm text-slate-200">
-                      Drop a clip here or{" "}
-                      <span className="cursor-pointer text-indigo-400 underline underline-offset-2">
-                        browse files
-                      </span>
-                    </p>
-                    <p className="text-[11px] text-slate-500">
-                      MP4 / MOV · 5–10s recommended · player should fill at
-                      least 15–20% of the frame.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-slate-300">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                      <span>Capture quality checker will run automatically</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500">
-                      If the clip is too wide, we&apos;ll still allow pose +
-                      basic insights, but gate advanced physics.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="rounded-full bg-indigo-500 px-5 py-2 text-xs font-medium text-white shadow-lg shadow-indigo-500/40 hover:bg-indigo-400"
-                  >
-                    Upload & queue analysis
-                  </button>
-                </div>
-              </form>
-            </section>
-
-            {/* Capture tips / requirements */}
-            <section className="space-y-4">
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-xs">
-                <h2 className="mb-2 text-sm font-semibold text-slate-200">
-                  Capture tips
-                </h2>
-                <ul className="space-y-2 text-slate-400">
-                  <li>• 60 fps or higher where possible.</li>
-                  <li>• Player should occupy ≥ 15% of frame height.</li>
-                  <li>• Keep the full run-up + follow-through in view.</li>
-                  <li>• Avoid heavy motion blur or camera shake.</li>
-                </ul>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-xs text-slate-400">
-                <h2 className="mb-2 text-sm font-semibold text-slate-200">
-                  What happens next?
-                </h2>
-                <ol className="space-y-1 list-decimal pl-4">
-                  <li>Pose model tracks joints frame-by-frame.</li>
-                  <li>PINNs engine estimates forces & ball physics.</li>
-                  <li>LLM converts metrics into coach-ready insights.</li>
-                  <li>
-                    Session appears in your dashboard, trends & reports.
-                  </li>
-                </ol>
-              </div>
-            </section>
+            <ul className="mt-4 space-y-2 text-xs text-slate-400">
+              <li>• ORA auto-checks resolution, frame rate and brightness before full physics.</li>
+              <li>• Wide “TV camera” highlights may be limited to tactical insights only.</li>
+              <li>• Close / mid-range clips of a single player give the most accurate biomechanics.</li>
+            </ul>
           </div>
-        </main>
+
+          <div className="rounded-2xl border border-violet-600/40 bg-gradient-to-br from-violet-600/20 via-fuchsia-500/10 to-sky-500/10 p-4 text-xs text-slate-50 shadow-[0_0_25px_rgba(59,130,246,0.35)]">
+            <p className="font-medium">Workflow hint</p>
+            <p className="mt-1 text-[11px] text-violet-100/90">
+              After processing, the session appears in the <span className="font-semibold">Dashboard</span>.
+            </p>
+          </div>
+        </section>
       </div>
     </div>
   );
