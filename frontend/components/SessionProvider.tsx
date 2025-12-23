@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { Session, SessionStatus, SessionType, QualityLevel, DashboardMetrics } from "../lib/types";
-import { MLSessionResult, MLDashboardSummary } from "../lib/ml-contract";
-import { getMockSessionResult, getMockDashboardSummary, simulateMLProcessing } from "../lib/mockML";
+import { MLSessionResult } from "../lib/ml-contract";
+import { getMockSessionResult, simulateMLProcessing } from "../lib/mockML";
 
 // Extended session with ML results
 export type SessionWithML = Session & {
@@ -59,6 +59,49 @@ const initialSessions: SessionWithML[] = [
     status: "processed",
     createdAt: new Date("2025-12-10"),
     processedAt: new Date("2025-12-10"),
+    mlResult: {
+      sessionId: "s1",
+      pose: {
+        keypointsAvailable: true,
+        confidence: 0.92,
+      },
+      physics: {
+        impactEfficiency: 78,
+        spinStability: 85,
+        approachSpeed: 4.8,
+        loadIndex: 65,
+        peakTorque: 145,
+      },
+      risk: {
+        riskIndex: 35,
+        asymmetry: 8.5,
+        flags: ["asymmetry"],
+        level: "moderate" as const,
+      },
+      aiInsights: {
+        summary: "Strong set-piece execution with good power transfer. Risk level: moderate.",
+        coachingPoints: [
+          "Maintain consistent approach speed",
+          "Focus on plant leg stability",
+          "Optimize striking angle for spin",
+        ],
+        suggestedDrills: [
+          "Free-kick accuracy drill (10 reps)",
+          "Power transfer exercises",
+          "Approach consistency training",
+        ],
+      },
+      timeline: {
+        impactFrame: 52,
+        plantFrame: 28,
+        releaseFrame: 58,
+      },
+      meta: {
+        processedAt: new Date("2025-12-10").toISOString(),
+        processingTimeMs: 1650,
+        modelVersion: "v1.2.0-mock",
+      },
+    },
   },
   {
     id: "s2",
@@ -80,15 +123,7 @@ const initialSessions: SessionWithML[] = [
   },
 ];
 
-// Generate ML results for initial sessions
-initialSessions.forEach((session) => {
-  if (session.status === "processed") {
-    session.mlResult = getMockSessionResult(session.id, session.type, session.player);
-  }
-});
-
 function computeDashboardMetrics(sessions: SessionWithML[]): DashboardMetrics {
-  const mockSummary = getMockDashboardSummary();
   const processedSessions = sessions.filter((s) => s.status === "processed");
   
   const avgEfficiency = processedSessions.length > 0
@@ -97,7 +132,7 @@ function computeDashboardMetrics(sessions: SessionWithML[]): DashboardMetrics {
           .map((s) => s.mlResult?.physics.impactEfficiency ?? 0)
           .reduce((a, b) => a + b, 0) / processedSessions.length
       )
-    : mockSummary.avgImpactEfficiency;
+    : 78;
 
   const riskFlags = processedSessions.filter(
     (s) => s.mlResult?.risk.level === "high" || s.mlResult?.risk.level === "moderate"
@@ -107,7 +142,7 @@ function computeDashboardMetrics(sessions: SessionWithML[]): DashboardMetrics {
     totalSessions: sessions.length,
     avgImpactEfficiency: avgEfficiency,
     riskLevel: riskFlags.length > 2 ? "high" : riskFlags.length > 0 ? "moderate" : "low",
-    setPieceEfficiency: mockSummary.setPieceStats.efficiency,
+    setPieceEfficiency: 6,
     flaggedPlayers: Math.min(riskFlags.length, 3),
   };
 }
