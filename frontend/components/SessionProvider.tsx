@@ -183,6 +183,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const runAnalysis = async (sessionId: string): Promise<void> => {
+    // Capture session snapshot before async operations
+    const sessionSnapshot = sessions.find((s) => s.id === sessionId);
+    if (!sessionSnapshot) return;
+
     // Update status to processing
     setSessions((prev) =>
       prev.map((s) => (s.id === sessionId ? { ...s, status: "processing" as SessionStatus } : s))
@@ -191,11 +195,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // Simulate ML processing
     await simulateMLProcessing(1500);
 
-    // Get mock ML result
-    const session = sessions.find((s) => s.id === sessionId);
-    if (!session) return;
-
-    const mlResult = getMockSessionResult(sessionId, session.type, session.player);
+    // Get mock ML result using snapshot
+    const mlResult = getMockSessionResult(sessionId, sessionSnapshot.type, sessionSnapshot.player);
 
     // Update session with results
     setSessions((prev) => {
