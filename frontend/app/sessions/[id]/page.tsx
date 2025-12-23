@@ -2,15 +2,16 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSessions } from "../../../components/SessionProvider";
+import { useSessions, mapTypeToDisplay, mapStatusToDisplay } from "../../../components/SessionProvider";
 
 export default function SessionDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { sessions } = useSessions();
+  const { getSessionById } = useSessions();
 
   const id = params?.id as string;
-  const session = sessions.find((s) => s.id === id);
+  const session = getSessionById(id);
+  const mlResult = session?.mlResult;
 
   if (!session) {
     return (
@@ -44,13 +45,19 @@ export default function SessionDetailPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-50">
-            {session.type} session – {session.player}
+            {mapTypeToDisplay(session.type)} session – {session.player}
           </h1>
           <p className="mt-1 text-sm text-slate-400">
             {session.date} · Quality:{" "}
             <span className="font-medium text-slate-200">{session.quality}</span>{" "}
             · Status:{" "}
-            <span className="font-medium text-slate-200">{session.status}</span>
+            <span className="font-medium text-slate-200">{mapStatusToDisplay(session.status)}</span>
+            {mlResult && (
+              <>
+                {" "}· Confidence:{" "}
+                <span className="font-medium text-emerald-300">{Math.round(mlResult.pose.confidence * 100)}%</span>
+              </>
+            )}
           </p>
         </div>
 
@@ -124,21 +131,56 @@ export default function SessionDetailPage() {
         <div className="space-y-4">
           <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              AI coaching insights (summary)
-            </p>
-            <p className="mb-3 text-sm text-slate-200">
-              Once the backend is wired, this block will show a few headline
-              insights for this session — e.g. power, control, and risk notes
-              with suggested drills.
-            </p>
-            <ul className="space-y-2 text-xs text-slate-400">
-              <li>• Power: placeholder summary.</li>
-              <li>• Control: placeholder summary.</li>
-              <li>• Risk: placeholder summary.</li>
-            </ul>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4 text-xs text-slate-400">
+                AI coaching insights {mlResult && "(summary)"}
+              </p>
+              {mlResult ? (
+                <>
+                  <p className="mb-3 text-sm text-slate-200">
+                    {mlResult.aiInsights.summary}
+                  </p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-slate-300">Coaching Points</p>
+                      <ul className="space-y-1 text-xs text-slate-400">
+                        {mlResult.aiInsights.coachingPoints.map((point, idx) => (
+                          <li key={idx}>• {point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-slate-300">Suggested Drills</p>
+                      <ul className="space-y-1 text-xs text-slate-400">
+                        {mlResult.aiInsights.suggestedDrills.map((drill, idx) => (
+                          <li key={idx}>• {drill}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    {mlResult.risk.flags.length > 0 && (
+                      <div className="rounded-lg bg-amber-500/10 p-2">
+                        <p className="mb-1 text-xs font-medium text-amber-300">Risk Flags</p>
+                        <ul className="space-y-1 text-xs text-amber-200">
+                          {mlResult.risk.flags.map((flag, idx) => (
+                            <li key={idx}>⚠ {flag}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="mb-3 text-sm text-slate-200">
+                    Once the backend is wired, this block will show a few headline
+                    insights for this session — e.g. power, control, and risk notes
+                    with suggested drills.
+                  </p>
+                  <ul className="space-y-2 text-xs text-slate-400">
+                    <li>• Power: placeholder summary.</li>
+                    <li>• Control: placeholder summary.</li>
+                    <li>• Risk: placeholder summary.</li>
+                  </ul>
+                </>
+              )}
             <p className="mb-1 font-semibold text-slate-200">
               Next steps in the build
             </p>

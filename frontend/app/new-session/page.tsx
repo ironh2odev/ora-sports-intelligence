@@ -3,14 +3,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSessions } from "../../components/SessionProvider";
-
-type LocalSessionType = "set-piece" | "drill" | "highlight";
+import { SessionType } from "../../lib/types";
 
 export default function NewSessionPage() {
-  const { addSession } = useSessions();
+  const { createSession, runAnalysis } = useSessions();
   const router = useRouter();
 
-  const [sessionType, setSessionType] = useState<LocalSessionType>("set-piece");
+  const [sessionType, setSessionType] = useState<SessionType>("set-piece");
   const [playerName, setPlayerName] = useState("");
   const [sessionDate, setSessionDate] = useState(
     new Date().toISOString().slice(0, 10)
@@ -30,7 +29,7 @@ export default function NewSessionPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!playerName.trim() || !fileName) {
       window.alert("Please enter a player name and choose a video file.");
@@ -38,28 +37,31 @@ export default function NewSessionPage() {
     }
 
     setStatus("queued");
+
+    // Create session
+    const sessionId = createSession({
+      player: playerName,
+      type: sessionType,
+      date: sessionDate,
+      notes,
+      videoFileName: fileName,
+    });
+
     setTimeout(() => setStatus("processing"), 800);
-    setTimeout(() => {
+
+    // Run ML analysis
+    try {
+      await runAnalysis(sessionId);
       setStatus("done");
-
-      const mappedType =
-        sessionType === "set-piece"
-          ? "Set-piece"
-          : sessionType === "drill"
-          ? "Drill"
-          : "Highlight";
-
-      addSession({
-        date: sessionDate,
-        type: mappedType as any,
-        player: playerName || "Unnamed player",
-        quality: "Good",
-        status: "Processed",
-      });
-
-      // redirect to dashboard so user sees the new row
-      router.push("/");
-    }, 1400);
+      
+      // Redirect to dashboard after successful analysis
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      setStatus("idle");
+    }
   };
 
   const statusLabel = {
@@ -120,12 +122,12 @@ export default function NewSessionPage() {
                   { id: "drill", label: "Drill" },
                   { id: "highlight", label: "Highlight" },
                 ].map((opt) => {
-                  const selected = sessionType === (opt.id as LocalSessionType);
+                  const selected = sessionType === (opt.id as SessionType);
                   return (
                     <button
                       key={opt.id}
                       type="button"
-                      onClick={() => setSessionType(opt.id as LocalSessionType)}
+                      onClick={() => setSessionType(opt.id as SessionType)}
                       className={`flex-1 rounded-full px-4 py-2 transition ${
                         selected
                           ? "bg-violet-500 text-slate-50 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
