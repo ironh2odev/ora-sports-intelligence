@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Session, SessionStatus, SessionType, QualityLevel, DashboardMetrics } from "../lib/types";
 import { MLSessionResult } from "../lib/ml-contract";
 import { getMockSessionResult, simulateMLProcessing } from "../lib/mockML";
@@ -124,6 +124,59 @@ const initialSessions: SessionWithML[] = [
   },
 ];
 
+// Serialization helpers for localStorage persistence
+function serializeSessions(sessions: SessionWithML[]): string {
+  try {
+    const serialized = sessions.map((s) => ({
+      ...s,
+      createdAt: s.createdAt?.toISOString(),
+      processedAt: s.processedAt?.toISOString(),
+      mlResult: s.mlResult ? {
+        ...s.mlResult,
+        meta: {
+          ...s.mlResult.meta,
+          processedAt: s.mlResult.meta.processedAt,
+        },
+      } : undefined,
+    }));
+    return JSON.stringify(serialized);
+  } catch (e) {
+    console.error("Failed to serialize sessions:", e);
+    return "[]";
+  }
+}
+
+function deserializeSessions(raw: string): SessionWithML[] | null {
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    
+    return parsed.map((s: any) => ({
+      ...s,
+      createdAt: s.createdAt ? new Date(s.createdAt) : undefined,
+      processedAt: s.processedAt ? new Date(s.processedAt) : undefined,
+    }));
+  } catch (e) {
+    console.error("Failed to deserialize sessions:", e);
+    return null;
+  }
+}
+
+function loadSessionsFromStorage(): SessionWithML[] {
+  if (typeof window === "undefined") return initialSessions;
+  
+  try {
+    const stored = localStorage.getItem("ora:sessions:v1");
+    if (!stored) return initialSessions;
+    
+    const deserialized = deserializeSessions(stored);
+    return deserialized && deserialized.length > 0 ? deserialized : initialSessions;
+  } catch (e) {
+    console.error("Failed to load sessions from storage:", e);
+    return initialSessions;
+  }
+}
+
 function computeDashboardMetrics(sessions: SessionWithML[]): DashboardMetrics {
   const processedSessions = sessions.filter((s) => s.status === "processed");
   
@@ -149,10 +202,22 @@ function computeDashboardMetrics(sessions: SessionWithML[]): DashboardMetrics {
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [sessions, setSessions] = useState<SessionWithML[]>(initialSessions);
-  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics>(
-    computeDashboardMetrics(initialSessions)
+  const [sessions, setSessions] = useState<SessionWithML[]>(() => loadSessionsFromStorage());
+  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics>(() =>
+    computeDashboardMetrics(loadSessionsFromStorage())
   );
+
+  // Persist sessions to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const serialized = serializeSessions(sessions);
+        localStorage.setItem("ora:sessions:v1", serialized);
+      } catch (e) {
+        console.error("Failed to save sessions to storage:", e);
+      }
+    }
+  }, [sessions]);
 
   const createSession = (input: {
     player: string;
