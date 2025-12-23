@@ -117,14 +117,50 @@ export default function SessionDetailPage() {
             <div className="mb-2 flex items-center justify-between text-xs text-slate-300">
               <span className="font-medium">Physics & biomechanics</span>
               <span className="rounded-full bg-slate-800 px-2 py-1 text-[10px] uppercase tracking-wide text-slate-400">
-                Coming soon
+                {mlResult ? "Live data" : "Coming soon"}
               </span>
             </div>
-            <p className="max-w-md text-xs text-slate-400">
-              This panel will show torque curves, approach speed, spin,
-              trajectory previews, and fatigue indices powered by the PINNs
-              engine.
-            </p>
+            {mlResult ? (
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Impact Efficiency</span>
+                  <span className="font-medium text-slate-200">{mlResult.physics.impactEfficiency}/100</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Spin Stability</span>
+                  <span className="font-medium text-slate-200">{mlResult.physics.spinStability}/100</span>
+                </div>
+                {mlResult.physics.approachSpeed && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Approach Speed</span>
+                    <span className="font-medium text-slate-200">{mlResult.physics.approachSpeed.toFixed(1)} m/s</span>
+                  </div>
+                )}
+                {mlResult.physics.loadIndex && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Load Index</span>
+                    <span className="font-medium text-slate-200">{mlResult.physics.loadIndex}/100</span>
+                  </div>
+                )}
+                <div className="mt-3 flex justify-between border-t border-slate-800 pt-2">
+                  <span className="text-slate-400">Risk Level</span>
+                  <span className={`font-medium capitalize ${
+                    mlResult.risk.level === "low" ? "text-emerald-300" :
+                    mlResult.risk.level === "moderate" ? "text-amber-300" : "text-rose-300"
+                  }`}>{mlResult.risk.level}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Asymmetry</span>
+                  <span className="font-medium text-slate-200">{mlResult.risk.asymmetry.toFixed(1)}%</span>
+                </div>
+              </div>
+            ) : (
+              <p className="max-w-md text-xs text-slate-400">
+                This panel will show torque curves, approach speed, spin,
+                trajectory previews, and fatigue indices powered by the PINNs
+                engine.
+              </p>
+            )}
           </div>
         </div>
 
