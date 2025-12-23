@@ -3,59 +3,7 @@ import Link from "next/link";
 
 export default function ReportsPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="flex h-screen">
-        {/* Sidebar */}
-        <aside className="w-64 border-r border-slate-800 bg-slate-950/80 px-5 py-6">
-          <div className="mb-8 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 text-xs font-semibold">
-              ORA
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold tracking-wide">
-                Sports Intelligence
-              </span>
-              <span className="text-xs text-slate-400">Demo club</span>
-            </div>
-          </div>
-
-          <nav className="space-y-2 text-sm">
-            <Link
-              href="/"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Dashboard</span>
-            </Link>
-            <Link
-              href="/new-session"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>New Session</span>
-            </Link>
-            <Link
-              href="/trends"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Trends</span>
-            </Link>
-            <Link
-              href="/reports"
-              className="flex items-center justify-between rounded-lg px-3 py-2 bg-slate-800 text-slate-50"
-            >
-              <span>Reports</span>
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            </Link>
-            <Link
-              href="/settings"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Settings</span>
-            </Link>
-          </nav>
-        </aside>
-
-        {/* Main */}
-        <main className="flex-1 overflow-y-auto px-10 py-8">
+    <div>
           <header className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">
@@ -138,8 +86,6 @@ export default function ReportsPage() {
               </table>
             </div>
           </section>
-        </main>
-      </div>
     </div>
   );
 }

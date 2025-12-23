@@ -3,59 +3,7 @@ import Link from "next/link";
 
 export default function SettingsPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="flex h-screen">
-        {/* Sidebar */}
-        <aside className="w-64 border-r border-slate-800 bg-slate-950/80 px-5 py-6">
-          <div className="mb-8 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 text-xs font-semibold">
-              ORA
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold tracking-wide">
-                Sports Intelligence
-              </span>
-              <span className="text-xs text-slate-400">Demo club</span>
-            </div>
-          </div>
-
-          <nav className="space-y-2 text-sm">
-            <Link
-              href="/"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Dashboard</span>
-            </Link>
-            <Link
-              href="/new-session"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>New Session</span>
-            </Link>
-            <Link
-              href="/trends"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Trends</span>
-            </Link>
-            <Link
-              href="/reports"
-              className="flex items-center justify-between rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
-            >
-              <span>Reports</span>
-            </Link>
-            <Link
-              href="/settings"
-              className="flex items-center justify-between rounded-lg px-3 py-2 bg-slate-800 text-slate-50"
-            >
-              <span>Settings</span>
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            </Link>
-          </nav>
-        </aside>
-
-        {/* Main */}
-        <main className="flex-1 overflow-y-auto px-10 py-8">
+    <div>
           <header className="mb-8">
             <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
             <p className="mt-1 text-sm text-slate-400">
@@ -127,10 +75,10 @@ export default function SettingsPage() {
               </p>
 
               <div className="mt-4 grid gap-3 text-xs">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-slate-300">Impact efficiency</span>
+                <div className="flex items-center gap-3">
+                  <span className="w-32 text-slate-300">Impact efficiency</span>
                   <input
-                    className="w-24 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-right outline-none focus:border-indigo-400"
+                    className="w-20 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-right outline-none focus:border-indigo-400"
                     defaultValue="75"
                   />
                   <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] text-emerald-300">
@@ -138,21 +86,21 @@ export default function SettingsPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-slate-300">Risk index</span>
+                <div className="flex items-center gap-3">
+                  <span className="w-32 text-slate-300">Risk index</span>
                   <input
-                    className="w-24 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-right outline-none focus:border-indigo-400"
-                    defaultValue="0.4"
+                    className="w-20 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-right outline-none focus:border-indigo-400"
+                    defaultValue="40"
                   />
                   <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] text-amber-300">
-                    Amber ≥ 0.4
+                    Amber ≥ 40
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-slate-300">Asymmetry</span>
+                <div className="flex items-center gap-3">
+                  <span className="w-32 text-slate-300">Asymmetry</span>
                   <input
-                    className="w-24 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-right outline-none focus:border-indigo-400"
+                    className="w-20 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-right outline-none focus:border-indigo-400"
                     defaultValue="10"
                   />
                   <span className="rounded-full bg-rose-500/10 px-2 py-1 text-[10px] text-rose-300">
@@ -192,8 +140,6 @@ export default function SettingsPage() {
               </button>
             </div>
           </section>
-        </main>
-      </div>
     </div>
   );
 }

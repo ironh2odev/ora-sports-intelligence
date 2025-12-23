@@ -231,6 +231,17 @@ export default function NewSessionPage() {
             </ul>
           </div>
 
+          <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900 p-5 text-sm">
+            <h3 className="text-sm font-semibold text-slate-100">Capture tips</h3>
+            <p className="mt-1 text-xs text-slate-400">Better footage → better physics → better insights.</p>
+            <ul className="mt-3 space-y-2 text-xs text-slate-300">
+              <li>• Keep the player filling ~30–50% of the frame.</li>
+              <li>• Use landscape orientation and avoid heavy zoom.</li>
+              <li>• Record at 60 fps if possible for set-pieces.</li>
+              <li>• Avoid strong backlight – keep the subject well lit.</li>
+            </ul>
+          </div>
+
           <div className="rounded-2xl border border-violet-600/40 bg-gradient-to-br from-violet-600/20 via-fuchsia-500/10 to-sky-500/10 p-4 text-xs text-slate-50 shadow-[0_0_25px_rgba(59,130,246,0.35)]">
             <p className="font-medium">Workflow hint</p>
             <p className="mt-1 text-[11px] text-violet-100/90">
