@@ -5,7 +5,15 @@ import Link from "next/link";
 import { useSessions, mapTypeToDisplay, mapStatusToDisplay } from "@/components/SessionProvider";
 
 export default function Home() {
-  const { sessions, dashboardMetrics } = useSessions();
+  const { sessions, dashboardMetrics, retryAnalysis } = useSessions();
+
+  const handleRetry = async (sessionId: string) => {
+    try {
+      await retryAnalysis(sessionId);
+    } catch (error) {
+      console.error("Retry failed:", error);
+    }
+  };
 
   return (
     <div>
@@ -84,7 +92,16 @@ export default function Home() {
                     <td className="px-4 py-3"><QualityBadge quality={s.quality} /></td>
                     <td className="px-4 py-3 text-slate-300"><StatusBadge status={mapStatusToDisplay(s.status)} /></td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/sessions/${s.id}`} className="text-xs font-medium text-sky-400 hover:text-sky-300">Open →</Link>
+                      {s.status === "processing" ? (
+                        <button 
+                          onClick={() => handleRetry(s.id)}
+                          className="text-xs font-medium text-amber-400 hover:text-amber-300"
+                        >
+                          Retry →
+                        </button>
+                      ) : (
+                        <Link href={`/sessions/${s.id}`} className="text-xs font-medium text-sky-400 hover:text-sky-300">Open →</Link>
+                      )}
                     </td>
                   </tr>
                 ))}

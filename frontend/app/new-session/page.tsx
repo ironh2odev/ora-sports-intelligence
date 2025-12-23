@@ -54,13 +54,14 @@ export default function NewSessionPage() {
       await runAnalysis(sessionId);
       setStatus("done");
       
-      // Redirect to dashboard after successful analysis
+      // Wait a bit to show "done" state, then redirect
       setTimeout(() => {
         router.push("/");
-      }, 1000);
+      }, 800);
     } catch (error) {
       console.error("Analysis failed:", error);
       setStatus("idle");
+      window.alert("Analysis failed. Please try again.");
     }
   };
 

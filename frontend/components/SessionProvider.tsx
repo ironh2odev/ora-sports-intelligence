@@ -23,6 +23,7 @@ type SessionContextValue = {
   runAnalysis: (sessionId: string) => Promise<void>;
   getSessionById: (id: string) => SessionWithML | undefined;
   updateSessionStatus: (id: string, status: SessionStatus) => void;
+  retryAnalysis: (sessionId: string) => Promise<void>;
 };
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
@@ -226,6 +227,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const retryAnalysis = async (sessionId: string): Promise<void> => {
+    // Simply call runAnalysis again - it will reprocess the session
+    await runAnalysis(sessionId);
+  };
+
   return (
     <SessionContext.Provider
       value={{
@@ -235,6 +241,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         runAnalysis,
         getSessionById,
         updateSessionStatus,
+        retryAnalysis,
       }}
     >
       {children}
