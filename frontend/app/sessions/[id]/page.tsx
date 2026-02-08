@@ -3,6 +3,7 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSessions, mapTypeToDisplay, mapStatusToDisplay } from "../../../components/SessionProvider";
+import { getSportAdapter } from "../../../lib/sports-adapters";
 
 export default function SessionDetailPage() {
   const params = useParams();
@@ -12,6 +13,7 @@ export default function SessionDetailPage() {
   const id = params?.id as string;
   const session = getSessionById(id);
   const mlResult = session?.mlResult;
+  const sportAdapter = session ? getSportAdapter(session.sportId) : null;
 
   if (!session) {
     return (
@@ -44,9 +46,16 @@ export default function SessionDetailPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-50">
-            {mapTypeToDisplay(session.type)} session – {session.player}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold text-slate-50">
+              {mapTypeToDisplay(session.type)} session – {session.player}
+            </h1>
+            {sportAdapter && (
+              <span className="rounded-full bg-violet-500/15 px-3 py-1 text-xs font-medium text-violet-300 border border-violet-500/30">
+                {sportAdapter.metadata.icon} {sportAdapter.metadata.name}
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-sm text-slate-400">
             {session.date} · Quality:{" "}
             <span className="font-medium text-slate-200">{session.quality}</span>{" "}

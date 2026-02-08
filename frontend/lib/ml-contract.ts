@@ -1,6 +1,8 @@
 // frontend/lib/ml-contract.ts
 // SINGLE SOURCE OF TRUTH: ML → UI contract
 
+import { SportId } from "./sports-adapters";
+
 /**
  * This interface defines what the ML backend MUST return.
  * UI will ONLY depend on this contract.
@@ -8,6 +10,14 @@
  */
 export interface MLSessionResult {
   sessionId: string;
+  sportId: SportId; // Required: identifies which sport this result is for
+  
+  // Context layer for sport-specific metadata
+  context: {
+    sportId: SportId;
+    discipline?: string; // e.g., "free-kick", "serve", "sprint-start"
+    contextTags?: string[]; // e.g., ["set-piece", "training", "match-day"]
+  };
   
   // Pose estimation results
   pose: {

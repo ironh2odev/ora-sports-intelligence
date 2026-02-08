@@ -4,15 +4,20 @@
 
 import { MLSessionResult, MLTrendData, MLDashboardSummary } from "./ml-contract";
 import { SessionType } from "./types";
+import { SportId, getSportAdapter, DEFAULT_SPORT_ID } from "./sports-adapters";
 
 /**
- * Simulate ML processing for a session
+ * Simulate ML processing for a session with sport-specific results
  */
 export function getMockSessionResult(
   sessionId: string,
   sessionType: SessionType,
-  playerName: string
+  playerName: string,
+  sportId?: SportId
 ): MLSessionResult {
+  const sport = sportId || DEFAULT_SPORT_ID;
+  const adapter = getSportAdapter(sport);
+  
   // Vary results based on session type
   const baseEfficiency = sessionType === "set-piece" ? 78 : sessionType === "drill" ? 72 : 65;
   const variance = Math.random() * 15 - 7.5;
@@ -20,16 +25,35 @@ export function getMockSessionResult(
 
   const riskValue = Math.random() * 100;
   const riskLevel: "low" | "moderate" | "high" = 
-    riskValue < 30 ? "low" : riskValue < 60 ? "moderate" : "high";
+    riskValue < adapter.riskMapping.moderateRiskThreshold ? "low" : 
+    riskValue < adapter.riskMapping.highRiskThreshold ? "moderate" : "high";
 
   const asymmetry = Math.random() * 20;
+  
+  // Generate sport-specific risk flags
   const flags: string[] = [];
+  const possibleFlags = adapter.physicsEmphasis.riskFactors;
   if (asymmetry > 10) flags.push("asymmetry");
-  if (riskValue > 60) flags.push("valgus");
-  if (Math.random() > 0.7) flags.push("decel_load");
+  if (riskValue > adapter.riskMapping.highRiskThreshold && possibleFlags.length > 0) {
+    flags.push(possibleFlags[0]);
+  }
+  if (Math.random() > 0.7 && possibleFlags.length > 1) {
+    flags.push(possibleFlags[1]);
+  }
+
+  // Select discipline based on sport
+  const discipline = adapter.metadata.primaryDisciplines[
+    Math.floor(Math.random() * adapter.metadata.primaryDisciplines.length)
+  ];
 
   return {
     sessionId,
+    sportId: sport,
+    context: {
+      sportId: sport,
+      discipline,
+      contextTags: [sessionType, adapter.metadata.contextTags[0]],
+    },
     pose: {
       keypointsAvailable: true,
       confidence: 0.85 + Math.random() * 0.1,
@@ -48,9 +72,9 @@ export function getMockSessionResult(
       level: riskLevel,
     },
     aiInsights: {
-      summary: generateInsightSummary(sessionType, impactEfficiency, riskLevel),
-      coachingPoints: generateCoachingPoints(sessionType),
-      suggestedDrills: generateSuggestedDrills(sessionType),
+      summary: generateInsightSummary(sport, sessionType, discipline, impactEfficiency, riskLevel),
+      coachingPoints: generateCoachingPoints(sport, sessionType),
+      suggestedDrills: generateSuggestedDrills(sport, sessionType),
     },
     timeline: {
       impactFrame: Math.floor(45 + Math.random() * 15),
@@ -125,57 +149,41 @@ export function getMockDashboardSummary(): MLDashboardSummary {
   };
 }
 
-// Helper functions for generating realistic mock content
+// Helper functions for generating realistic sport-specific mock content
 function generateInsightSummary(
+  sport: SportId,
   type: SessionType,
+  discipline: string,
   efficiency: number,
   risk: "low" | "moderate" | "high"
 ): string {
-  if (type === "set-piece") {
-    return efficiency > 80
-      ? `Strong ${type} execution with good power transfer. Risk level: ${risk}.`
-      : `Moderate ${type} performance. Focus on approach consistency. Risk level: ${risk}.`;
+  const adapter = getSportAdapter(sport);
+  
+  if (efficiency > 80) {
+    const template = adapter.insightLanguage.positiveTemplates[0];
+    return template.replace("{discipline}", discipline) + ` Risk level: ${risk}.`;
+  } else {
+    const template = adapter.insightLanguage.improvementTemplates[0];
+    return template.replace("{area}", discipline) + ` Risk level: ${risk}.`;
   }
-  if (type === "drill") {
-    return `Drill shows ${risk} risk markers. Impact efficiency at ${Math.round(efficiency)}%. Consider load management.`;
-  }
-  return `Highlight analyzed. Performance metrics captured for tactical review.`;
 }
 
-function generateCoachingPoints(type: SessionType): string[] {
-  const points = [
-    "Maintain consistent approach speed",
-    "Focus on plant leg stability",
-    "Optimize striking angle for spin",
-  ];
+function generateCoachingPoints(sport: SportId, type: SessionType): string[] {
+  const adapter = getSportAdapter(sport);
+  const templates = [...adapter.insightLanguage.improvementTemplates];
   
-  if (type === "drill") {
-    points.push("Monitor fatigue levels");
-    points.push("Ensure bilateral symmetry");
-  }
-  
-  return points.slice(0, 3);
+  // Pick 3 random coaching points
+  const shuffled = templates.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 3);
 }
 
-function generateSuggestedDrills(type: SessionType): string[] {
-  if (type === "set-piece") {
-    return [
-      "Free-kick accuracy drill (10 reps)",
-      "Power transfer exercises",
-      "Approach consistency training",
-    ];
-  }
-  if (type === "drill") {
-    return [
-      "Single-leg stability work",
-      "Deceleration mechanics",
-      "Plyometric progression",
-    ];
-  }
-  return [
-    "Tactical positioning review",
-    "Video analysis session",
-  ];
+function generateSuggestedDrills(sport: SportId, type: SessionType): string[] {
+  const adapter = getSportAdapter(sport);
+  const drills = [...adapter.insightLanguage.drillSuggestions];
+  
+  // Pick 3 random drills
+  const shuffled = drills.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 3);
 }
 
 /**

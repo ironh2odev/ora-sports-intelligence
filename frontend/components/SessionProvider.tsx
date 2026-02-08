@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Session, SessionStatus, SessionType, QualityLevel, DashboardMetrics } from "../lib/types";
 import { MLSessionResult } from "../lib/ml-contract";
 import { getMockSessionResult, simulateMLProcessing } from "../lib/mockML";
+import { SportId, DEFAULT_SPORT_ID } from "../lib/sports-adapters";
 
 // Extended session with ML results
 export type SessionWithML = Session & {
@@ -17,6 +18,7 @@ type SessionContextValue = {
     player: string;
     type: SessionType;
     date: string;
+    sportId?: SportId; // Optional: defaults to football
     notes?: string;
     videoFileName?: string;
   }) => string;
@@ -58,10 +60,17 @@ const initialSessions: SessionWithML[] = [
     player: "T. Mbappe",
     quality: "Good",
     status: "processed",
+    sportId: "football",
     createdAt: new Date("2025-12-10"),
     processedAt: new Date("2025-12-10"),
     mlResult: {
       sessionId: "s1",
+      sportId: "football",
+      context: {
+        sportId: "football",
+        discipline: "free-kick",
+        contextTags: ["set-piece", "training"],
+      },
       pose: {
         keypointsAvailable: true,
         confidence: 0.92,
@@ -111,6 +120,7 @@ const initialSessions: SessionWithML[] = [
     player: "A. Silva",
     quality: "OK",
     status: "processing",
+    sportId: "football",
     createdAt: new Date("2025-12-10"),
   },
   {
@@ -120,6 +130,7 @@ const initialSessions: SessionWithML[] = [
     player: "J. Alvarez",
     quality: "Retry",
     status: "needs_review",
+    sportId: "football",
     createdAt: new Date("2025-12-09"),
   },
 ];
@@ -223,6 +234,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     player: string;
     type: SessionType;
     date: string;
+    sportId?: SportId;
     notes?: string;
     videoFileName?: string;
   }): string => {
@@ -233,6 +245,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       player: input.player,
       quality: "Good",
       status: "not_started",
+      sportId: input.sportId || DEFAULT_SPORT_ID, // Default to football if not provided
       notes: input.notes,
       videoFileName: input.videoFileName,
       createdAt: new Date(),
@@ -248,10 +261,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const runAnalysis = async (sessionId: string): Promise<void> => {
-    // Capture session snapshot before async operations
-    const sessionSnapshot = sessions.find((s) => s.id === sessionId);
-    if (!sessionSnapshot) return;
-
     // Update status to processing
     setSessions((prev) =>
       prev.map((s) => (s.id === sessionId ? { ...s, status: "processing" as SessionStatus } : s))
@@ -260,11 +269,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // Simulate ML processing
     await simulateMLProcessing(1500);
 
-    // Get mock ML result using snapshot
-    const mlResult = getMockSessionResult(sessionId, sessionSnapshot.type, sessionSnapshot.player);
-
-    // Update session with results
+    // Update session with results - derive session from state inside setter
     setSessions((prev) => {
+      const sessionToProcess = prev.find((s) => s.id === sessionId);
+      if (!sessionToProcess) return prev;
+
+      // Get mock ML result using session data from current state
+      const mlResult = getMockSessionResult(
+        sessionId,
+        sessionToProcess.type,
+        sessionToProcess.player,
+        sessionToProcess.sportId
+      );
+
       const updated = prev.map((s) =>
         s.id === sessionId
           ? {

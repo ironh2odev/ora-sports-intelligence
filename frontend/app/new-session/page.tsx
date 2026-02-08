@@ -4,11 +4,13 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSessions } from "../../components/SessionProvider";
 import { SessionType } from "../../lib/types";
+import { SportId, getAllSports, DEFAULT_SPORT_ID } from "../../lib/sports-adapters";
 
 export default function NewSessionPage() {
   const { createSession, runAnalysis } = useSessions();
   const router = useRouter();
 
+  const [sportId, setSportId] = useState<SportId>(DEFAULT_SPORT_ID);
   const [sessionType, setSessionType] = useState<SessionType>("set-piece");
   const [playerName, setPlayerName] = useState("");
   const [sessionDate, setSessionDate] = useState(
@@ -19,6 +21,8 @@ export default function NewSessionPage() {
   const [status, setStatus] = useState<
     "idle" | "queued" | "processing" | "done"
   >("idle");
+
+  const allSports = getAllSports();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,6 +47,7 @@ export default function NewSessionPage() {
       player: playerName,
       type: sessionType,
       date: sessionDate,
+      sportId: sportId,
       notes,
       videoFileName: fileName,
     });
@@ -113,6 +118,23 @@ export default function NewSessionPage() {
             onSubmit={handleSubmit}
             className="mt-5 flex flex-col gap-5 text-sm text-slate-200"
           >
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-400">
+                Sport
+              </label>
+              <select
+                value={sportId}
+                onChange={(e) => setSportId(e.target.value as SportId)}
+                className="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2.5 text-sm text-slate-100 outline-none ring-0 transition placeholder:text-slate-500 focus:border-violet-500"
+              >
+                {allSports.map((sport) => (
+                  <option key={sport.id} value={sport.id}>
+                    {sport.icon} {sport.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex flex-col gap-2">
               <label className="text-xs font-medium text-slate-400">
                 Session type

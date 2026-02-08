@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useSessions, mapTypeToDisplay, mapStatusToDisplay } from "@/components/SessionProvider";
+import { getSportAdapter } from "@/lib/sports-adapters";
 
 export default function Home() {
   const { sessions, dashboardMetrics, retryAnalysis } = useSessions();
@@ -74,6 +75,7 @@ export default function Home() {
               <thead className="bg-slate-900/80 text-xs uppercase text-slate-400">
                 <tr>
                   <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Sport</th>
                   <th className="px-4 py-3">Type</th>
                   <th className="px-4 py-3">Player</th>
                   <th className="px-4 py-3">Quality</th>
@@ -82,29 +84,37 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {sessions.slice(0, 8).map((s) => (
-                  <tr key={s.id} className="border-t border-slate-800/60 hover:bg-slate-900/40">
-                    <td className="px-4 py-3 text-slate-300">{s.date}</td>
-                    <td className="px-4 py-3">
-                      <span className="rounded-full bg-slate-800/80 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-slate-100">{mapTypeToDisplay(s.type)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-200">{s.player}</td>
-                    <td className="px-4 py-3"><QualityBadge quality={s.quality} /></td>
-                    <td className="px-4 py-3 text-slate-300"><StatusBadge status={mapStatusToDisplay(s.status)} /></td>
-                    <td className="px-4 py-3 text-right">
-                      {s.status === "processing" ? (
-                        <button 
-                          onClick={() => handleRetry(s.id)}
-                          className="text-xs font-medium text-amber-400 hover:text-amber-300"
-                        >
-                          Retry →
-                        </button>
-                      ) : (
-                        <Link href={`/sessions/${s.id}`} className="text-xs font-medium text-sky-400 hover:text-sky-300">Open →</Link>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {sessions.slice(0, 8).map((s) => {
+                  const sportAdapter = getSportAdapter(s.sportId);
+                  return (
+                    <tr key={s.id} className="border-t border-slate-800/60 hover:bg-slate-900/40">
+                      <td className="px-4 py-3 text-slate-300">{s.date}</td>
+                      <td className="px-4 py-3">
+                        <span className="text-xs text-slate-400" title={sportAdapter.metadata.name}>
+                          {sportAdapter.metadata.icon} {sportAdapter.metadata.name}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="rounded-full bg-slate-800/80 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-slate-100">{mapTypeToDisplay(s.type)}</span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-200">{s.player}</td>
+                      <td className="px-4 py-3"><QualityBadge quality={s.quality} /></td>
+                      <td className="px-4 py-3 text-slate-300"><StatusBadge status={mapStatusToDisplay(s.status)} /></td>
+                      <td className="px-4 py-3 text-right">
+                        {s.status === "processing" ? (
+                          <button 
+                            onClick={() => handleRetry(s.id)}
+                            className="text-xs font-medium text-amber-400 hover:text-amber-300"
+                          >
+                            Retry →
+                          </button>
+                        ) : (
+                          <Link href={`/sessions/${s.id}`} className="text-xs font-medium text-sky-400 hover:text-sky-300">Open →</Link>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

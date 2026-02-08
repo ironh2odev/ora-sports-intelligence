@@ -1,6 +1,8 @@
 // frontend/lib/types.ts
 // Core domain types for ORA Sports Intelligence
 
+import { SportId } from "./sports-adapters";
+
 export type SessionStatus = "not_started" | "processing" | "processed" | "needs_review";
 export type SessionType = "set-piece" | "drill" | "highlight";
 export type QualityLevel = "Good" | "OK" | "Retry";
@@ -12,8 +14,10 @@ export interface Session {
   player: string;
   quality: QualityLevel;
   status: SessionStatus;
+  sportId: SportId; // Required: identifies which sport this session is for
   videoFileName?: string;
   notes?: string;
+  contextTags?: string[]; // Optional: sport-specific context tags
   createdAt: Date;
   processedAt?: Date;
 }
